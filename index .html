@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StreamFlix Admin Panel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+  body {
+    margin: 0; 
+    font-family: 'Montserrat', sans-serif; 
+    background-color: #111; 
+    color: #eee; 
+    min-height: 100vh;
+    display: flex; 
+    flex-direction: column;
+  }
+  header {
+    background-color: #e50914;
+    padding: 15px 25px;
+    font-weight: 700;
+    font-size: 1.8rem;
+    user-select: none;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  main {
+    flex-grow: 1;
+    padding: 20px 25px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  h1 {
+    margin-bottom: 15px;
+    text-align: center;
+    color: #e50914;
+  }
+  form {
+    background: #222;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(229,9,20,0.7);
+    max-width: 600px;
+    margin: 10px auto 40px auto;
+  }
+  label {
+    display: block;
+    margin: 10px 0 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    background-color: #333;
+    color: #eee;
+    resize: vertical;
+  }
+  textarea {
+    min-height: 60px;
+  }
+  button {
+    background-color: #e50914;
+    border: none;
+    color: white;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+    user-select: none;
+    box-shadow: 0 3px 10px rgba(229,9,20,0.9);
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #f40612;
+  }
+  .message {
+    text-align: center;
+    font-weight: 600;
+    margin-top: 15px;
+  }
+  .error {
+    color: #ff5c5c;
+  }
+  .success {
+    color: #4caf50;
+  }
+  section#movies-list {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    border-radius: 8px;
+    background: #222;
+    box-shadow: 0 0 15px rgba(229,9,20,0.7);
+    padding: 20px;
+    color: #ddd;
+  }
+  section#movies-list h2 {
+    margin-top: 0;
+    color: #e50914;
+    text-align: center;
+  }
+  ul.movies-items {
+    list-style: none;
+    padding-left: 0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  ul.movies-items li {
+    border-bottom: 1px solid #444;
+    padding: 10px 5px;
+    cursor: default;
+  }
+  ul.movies-items li:last-child {
+    border-bottom: none;
+  }
+  ul.movies-items li strong {
+    color: #e50914;
+  }
+  pre {
+    background: #333;
+    padding: 12px;
+    border-radius: 5px;
+    max-height: 200px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.9rem;
+  }
+  .export-btn {
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+    display: block;
+  }
+
+  @media (max-width: 640px) {
+    main, section#movies-list {
+      padding: 10px 15px;
+      max-width: 100%;
+    }
+    form {
+      max-width: 100%;
+      margin: 10px 10px 40px 10px;
+    }
+  }
+</style>
+</head>
+<body>
+<header>StreamFlix Admin Panel</header>
+<main>
+  <h1>Add New Movie</h1>
+  <form id="movie-form" novalidate>
+    <label for="title">Title *</label>
+    <input type="text" id="title" name="title" required placeholder="Movie title" />
+
+    <label for="description">Description</label>
+    <textarea id="description" name="description" placeholder="Short movie description"></textarea>
+
+    <label for="year">Year *</label>
+    <input type="number" id="year" name="year" required placeholder="e.g. 2024" min="1900" max="2100" />
+
+    <label for="category">Category *</label>
+    <select id="category" name="category" required>
+      <option value="" disabled selected>Select category</option>
+      <option value="trending">Trending</option>
+      <option value="action">Action</option>
+      <option value="comedy">Comedy</option>
+      <option value="drama">Drama</option>
+    </select>
+
+    <label for="rating">Rating</label>
+    <input type="text" id="rating" name="rating" placeholder="e.g. PG-13" />
+
+    <label for="poster">Poster Image URL *</label>
+    <input type="text" id="poster" name="poster" required placeholder="https://example.com/poster.jpg" />
+
+    <label for="videos">Video URLs (comma-separated) *</label>
+    <textarea id="videos" name="videos" required placeholder="https://example.com/video.mp4, https://example.com/video.webm"></textarea>
+
+    <button type="submit">Add Movie</button>
+    <p id="form-message" class="message" aria-live="polite"></p>
+  </form>
+
+  <section id="movies-list" aria-label="Current movies list">
+    <h2>Current Movies Data</h2>
+    <ul class="movies-items" id="movies-items-list"></ul>
+  </section>
+
+  <button id="export-btn" class="export-btn" aria-label="Export movies data as JSON">Export Movies Data as JSON</button>
+
+  <pre id="exported-json" hidden aria-live="polite" aria-atomic="true"></pre>
+</main>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'streamflix_admin_moviesData';
+
+  // Load movies data from storage or empty template
+  function loadMovies() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      try {
+        return JSON.parse(data);
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+    return { trending: [], action: [], comedy: [], drama: [] };
+  }
+
+  // Save movies data to storage
+  function saveMovies(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  let moviesData = loadMovies();
+
+  // DOM Elements
+  const form = document.getElementById('movie-form');
+  const messageEl = document.getElementById('form-message');
+  const moviesListEl = document.getElementById('movies-items-list');
+  const exportBtn = document.getElementById('export-btn');
+  const exportedJsonEl = document.getElementById('exported-json');
+
+  // Render movies list in admin panel
+  function renderMoviesList() {
+    moviesListEl.innerHTML = '';
+    const categories = ['trending', 'action', 'comedy', 'drama'];
+    categories.forEach(cat => {
+      if (moviesData[cat].length === 0) return;
+      const catHeader = document.createElement('li');
+      catHeader.innerHTML = `<strong>${cat.charAt(0).toUpperCase() + cat.slice(1)}:</strong>`;
+      catHeader.style.marginTop = '15px';
+      moviesListEl.appendChild(catHeader);
+      moviesData[cat].forEach((movie, i) => {
+        const li = document.createElement('li');
+        li.textContent = `${movie.title} (${movie.year}) - Rating: ${movie.rating || 'NR'}`;
+        moviesListEl.appendChild(li);
+      });
+    });
+    if (moviesListEl.children.length === 0) {
+      moviesListEl.innerHTML = '<li>No movies added yet.</li>';
+    }
+  }
+
+  // Validate URL (basic check)
+  function isValidUrl(string) {
+    try {
+      const url = new URL(string);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+
+  // Handle form submit
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    messageEl.textContent = '';
+    messageEl.className = 'message';
+
+    const formData = new FormData(form);
+    const title = formData.get('title').trim();
+    const description = formData.get('description').trim();
+    const year = parseInt(formData.get('year'));
+    const category = formData.get('category');
+    const rating = formData.get('rating').trim() || "NR";
+    const poster = formData.get('poster').trim();
+    const videosRaw = formData.get('videos').trim();
+
+    // Validate required
+    if (!title || !year || !category || !poster || !videosRaw) {
+      messageEl.textContent = 'Please fill in all required fields.';
+      messageEl.classList.add('error');
+      return;
+    }
+    if (!['trending', 'action', 'comedy', 'drama'].includes(category)) {
+      messageEl.textContent = 'Invalid category selected.';
+      messageEl.classList.add('error');
+      return;
+    }
+    if (!isValidUrl(poster)) {
+      messageEl.textContent = 'Poster URL is invalid.';
+      messageEl.classList.add('error');
+      return;
+    }
+
+    const videoUrls = videosRaw.split(',').map(url => url.trim()).filter(Boolean);
+    if (videoUrls.length === 0) {
+      messageEl.textContent = 'Please provide at least one valid video URL.';
+      messageEl.classList.add('error');
+      return;
+    }
+    for (const url of videoUrls) {
+      if (!isValidUrl(url)) {
+        messageEl.textContent = `Video URL invalid: ${url}`;
+        messageEl.classList.add('error');
+        return;
+      }
+    }
+
+    const videos = videoUrls.map(url => {
+      let type = 'video/mp4';
+      if (url.toLowerCase().endsWith('.webm')) type = 'video/webm';
+      return { src: url, type };
+    });
+
+    const newMovie = { title, description, year, category, rating, poster, videos };
+
+    // Add movie
+    if (!moviesData[category]) moviesData[category] = [];
+    moviesData[category].push(newMovie);
+
+    saveMovies(moviesData);
+    renderMoviesList();
+
+    messageEl.textContent = `Movie "${title}" added successfully.`;
+    messageEl.classList.add('success');
+    form.reset();
+  });
+
+  // Export movies data as JSON
+  exportBtn.addEventListener('click', () => {
+    const jsonStr = JSON.stringify(moviesData, null, 2);
+    exportedJsonEl.textContent = jsonStr;
+    exportedJsonEl.hidden = false;
+    exportedJsonEl.focus();
+  });
+
+  // Initial render
+  renderMoviesList();
+})();
+</script>
+</body>
+</html>
+
